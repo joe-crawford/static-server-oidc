@@ -1,0 +1,69 @@
+plugins {
+    id("groovy")
+    id("io.micronaut.application") version "4.5.4"
+    id("com.gradleup.shadow") version "8.3.7"
+    id("io.micronaut.aot") version "4.5.4"
+}
+
+version = "0.1"
+group = "static.server.oidc"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("io.micronaut:micronaut-http-client")
+    implementation("io.micronaut.groovy:micronaut-runtime-groovy")
+    implementation("io.micronaut.security:micronaut-security-oauth2")
+    implementation("io.micronaut.security:micronaut-security-jwt")
+    implementation("io.micronaut.serde:micronaut-serde-jackson")
+    compileOnly("io.micronaut:micronaut-http-validation")
+    compileOnly("io.micronaut.security:micronaut-security-annotations")
+    compileOnly("io.micronaut.serde:micronaut-serde-processor")
+    runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("org.yaml:snakeyaml")
+    aotPlugins platform("io.micronaut.platform:micronaut-platform:4.9.4")
+    aotPlugins("io.micronaut.security:micronaut-security-aot")
+}
+
+
+application {
+    mainClass = "static_.server.oidc.Application"
+}
+java {
+    sourceCompatibility = JavaVersion.toVersion("21")
+    targetCompatibility = JavaVersion.toVersion("21")
+}
+
+
+graalvmNative.toolchainDetection = false
+
+micronaut {
+    runtime("netty")
+    testRuntime("spock2")
+    processing {
+        incremental(true)
+        annotations("static_.server.oidc.*")
+    }
+    aot {
+        // Please review carefully the optimizations enabled below
+        // Check https://micronaut-projects.github.io/micronaut-aot/latest/guide/ for more details
+        optimizeServiceLoading = false
+        convertYamlToJava = false
+        precomputeOperations = true
+        cacheEnvironment = true
+        optimizeClassLoading = true
+        deduceEnvironment = true
+        optimizeNetty = true
+        replaceLogbackXml = true
+        configurationProperties.put("micronaut.security.jwks.enabled","false")
+        configurationProperties.put("micronaut.security.openid-configuration.enabled","false")
+    }
+}
+
+
+tasks.named("dockerfileNative") {
+    jdkVersion = "21"
+}
+
