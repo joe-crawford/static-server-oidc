@@ -6,9 +6,9 @@ Simply configures the default Micronaut static file server and Micronaut Securit
 
 ### Running from Docker Hub
 
-Usage:
+Image [`joecrawford/static-server-oidc` 🐳](https://hub.docker.com/r/joecrawford/static-server-oidc/tags) is available on Docker Hub.
 
-Serve files from `/local/path/to/public_html` on port 80 behind OIDC login
+Serve files from `/local/path/to/public_html` on port 80 behind OIDC login:
 ```bash
 docker run -it -p 80:80 -v /local/path/to/public_html:/public_html:ro \
     -e PUBLIC_HTML_ROOT=/public_html \
