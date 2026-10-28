@@ -41,13 +41,12 @@ class RequestAuditFilter implements HttpServerFilter {
             authentication = SessionForRequest.find(request)
                 .flatMap { session -> session.get(SecurityFilter.AUTHENTICATION, Authentication) }.orElse(null)
         }
-        String subject = authentication == null ? '-' : authentication.name
-        Object email = authentication?.attributes?.get('email')
-        boolean verifiedEmail = authentication?.attributes?.get('email_verified') == Boolean.TRUE
-        String identity = verifiedEmail && email instanceof String && !email.isBlank() ? (String) email :
-            (authentication == null ? 'anonymous' : subject)
-        log.info('request user="{}" subject="{}" method="{}" path="{}" status={}',
-            field(identity), field(subject), field(request.methodName), field(request.path), status)
+        String principal = authentication == null ? 'anonymous' : authentication.name
+        Object emailClaim = authentication?.attributes?.get('email')
+        // Log the provider's email claim separately; it need not declare email_verified.
+        String email = emailClaim instanceof String && !emailClaim.isBlank() ? (String) emailClaim : '-'
+        log.info('request principal="{}" email="{}" method="{}" path="{}" status={}',
+            field(principal), field(email), field(request.methodName), field(request.path), status)
     }
 
     private static String field(String value) {

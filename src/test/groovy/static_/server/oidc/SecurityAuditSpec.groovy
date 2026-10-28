@@ -93,12 +93,11 @@ class SecurityAuditSpec extends Specification implements TestPropertyProvider {
         appender.list.size() == 1
         appender.list[0].level == Level.INFO
         def message = appender.list[0].formattedMessage
-        message.contains('user="' + expectedIdentity + '"')
+        message.contains('principal="' + expectedPrincipal + '" email="' + expectedEmail + '"')
         message.contains('method="' + method + '" path="/index.html" status=' + response.code())
         !message.contains('DO_NOT_LOG')
         !message.contains('access_token')
         !message.contains('spoofed@example.org')
-        !message.contains('unverified@example.org')
         !message.contains('\n')
         session == null || (!message.contains(session.id) && !message.contains(sessionCookie(session).value))
 
@@ -106,23 +105,26 @@ class SecurityAuditSpec extends Specification implements TestPropertyProvider {
         if (session != null) sessionStore.deleteSession(session.id).get()
 
         where:
-        scenario          | method             | subject          | claims                                                           | expectedIdentity
-        'verified email'  | HttpMethod.GET     | 'subject-123'    | [email: 'reader@example.org', email_verified: true]                | 'reader@example.org'
-        'unverified email'| HttpMethod.GET     | 'subject-123'    | [email: 'unverified@example.org', email_verified: false]           | 'subject-123'
-        'non-boolean verification' | HttpMethod.GET | 'subject-123' | [email: 'unverified@example.org', email_verified: 'true']        | 'subject-123'
-        'missing email'   | HttpMethod.GET     | 'subject-123'    | [:]                                                              | 'subject-123'
-        'log injection'   | HttpMethod.GET     | 'reader\nforged' | [:]                                                              | 'reader?forged'
-        'anonymous GET'   | HttpMethod.GET     | null             | [:]                                                              | 'anonymous'
-        'anonymous HEAD'  | HttpMethod.HEAD    | null             | [:]                                                              | 'anonymous'
-        'anonymous POST'  | HttpMethod.POST    | null             | [:]                                                              | 'anonymous'
-        'anonymous OPTIONS'| HttpMethod.OPTIONS| null             | [:]                                                              | 'anonymous'
+        scenario                   | method             | subject          | claims                                                       | expectedPrincipal | expectedEmail
+        'verified email'           | HttpMethod.GET     | 'subject-123'    | [email: 'reader@example.org', email_verified: true]            | 'subject-123'     | 'reader@example.org'
+        'unverified email'         | HttpMethod.GET     | 'subject-123'    | [email: 'reader@example.org', email_verified: false]           | 'subject-123'     | 'reader@example.org'
+        'missing verification'     | HttpMethod.GET     | 'subject-123'    | [email: 'reader@example.org']                                  | 'subject-123'     | 'reader@example.org'
+        'non-boolean verification' | HttpMethod.GET     | 'subject-123'    | [email: 'reader@example.org', email_verified: 'true']          | 'subject-123'     | 'reader@example.org'
+        'missing email'            | HttpMethod.GET     | 'subject-123'    | [:]                                                          | 'subject-123'     | '-'
+        'blank email'              | HttpMethod.GET     | 'subject-123'    | [email: '  ']                                                | 'subject-123'     | '-'
+        'principal log injection'  | HttpMethod.GET     | 'reader\nforged' | [:]                                                          | 'reader?forged'   | '-'
+        'email log injection'      | HttpMethod.GET     | 'subject-123'    | [email: 'reader@example.org\nforged']                          | 'subject-123'     | 'reader@example.org?forged'
+        'anonymous GET'            | HttpMethod.GET     | null             | [:]                                                          | 'anonymous'       | '-'
+        'anonymous HEAD'           | HttpMethod.HEAD    | null             | [:]                                                          | 'anonymous'       | '-'
+        'anonymous POST'           | HttpMethod.POST    | null             | [:]                                                          | 'anonymous'       | '-'
+        'anonymous OPTIONS'        | HttpMethod.OPTIONS | null             | [:]                                                          | 'anonymous'       | '-'
     }
 
     void 'successful login is audited using the newly authenticated session'() {
         given:
         def callback = new SimpleHttpRequest(HttpMethod.GET, '/oauth/callback/default?code=DO_NOT_LOG', null)
         def authentication = Authentication.build('subject-123', [],
-            [email: 'reader@example.org', email_verified: true])
+            [email: 'reader@example.org'])
         def chain = Stub(ServerFilterChain) {
             proceed(_) >> { HttpRequest request -> Flux.just(loginHandler.loginSuccess(authentication, request)) }
         }
@@ -133,7 +135,7 @@ class SecurityAuditSpec extends Specification implements TestPropertyProvider {
 
         then:
         appender.list.size() == 1
-        appender.list[0].formattedMessage.contains('user="reader@example.org" subject="subject-123"')
+        appender.list[0].formattedMessage.contains('principal="subject-123" email="reader@example.org"')
         appender.list[0].formattedMessage.contains('path="/oauth/callback/default" status=303')
         !appender.list[0].formattedMessage.contains('DO_NOT_LOG')
     }
