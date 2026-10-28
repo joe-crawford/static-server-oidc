@@ -69,3 +69,17 @@ tasks.named("dockerfileNative") {
     jdkVersion = "21"
 }
 
+tasks.named("dockerBuild") {
+    if (providers.gradleProperty("dockerImage").isPresent()) {
+        images.set([providers.gradleProperty("dockerImage").get()])
+    }
+}
+
+tasks.named("dockerPush") {
+    registryCredentials {
+        url = "https://ghcr.io"
+        username = providers.environmentVariable("GHCR_USERNAME")
+        password = providers.environmentVariable("GHCR_TOKEN")
+    }
+}
+
