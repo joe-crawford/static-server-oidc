@@ -4,6 +4,14 @@ Serves a directory of static files on HTTP behind an OpenID Connect identity pro
 
 Simply configures the default Micronaut static file server and Micronaut Security JWT for OIDC.
 
+After OIDC login, authentication is stored in a server-side session that expires
+after one hour without requests. Requests renew the inactivity timeout. Successful
+login returns the user to the originally requested URL (including its query
+string); `LOGIN_SUCCESS_URL` (default `/`) is the fallback for direct logins.
+
+Sessions are held in memory, so restarting the server requires users to log in
+again. Multiple replicas need a shared session store or sticky sessions.
+
 ### Running from Docker Hub
 
 Image [`joecrawford/static-server-oidc` 🐳](https://hub.docker.com/r/joecrawford/static-server-oidc/tags) is available on Docker Hub.
