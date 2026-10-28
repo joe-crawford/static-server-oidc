@@ -14,6 +14,7 @@ repositories {
 
 dependencies {
     implementation("io.micronaut:micronaut-http-client")
+    implementation("io.projectreactor:reactor-core")
     implementation("io.micronaut.groovy:micronaut-runtime-groovy")
     implementation("io.micronaut.security:micronaut-security-oauth2")
     implementation("io.micronaut.security:micronaut-security-jwt")
@@ -24,6 +25,7 @@ dependencies {
     compileOnly("io.micronaut.serde:micronaut-serde-processor")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("org.yaml:snakeyaml")
+    testImplementation("ch.qos.logback:logback-classic")
     aotPlugins platform("io.micronaut.platform:micronaut-platform:4.10.22")
     aotPlugins("io.micronaut.security:micronaut-security-aot")
 }
