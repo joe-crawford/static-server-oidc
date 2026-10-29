@@ -3,6 +3,8 @@ micronaut:
     name: static-server-oidc
   server:
     port: ${SERVER_PORT:80}
+  session:
+    max-inactive-interval: 1h
   router:
     static-resources:
       assets:
@@ -10,7 +12,7 @@ micronaut:
         paths: file:${PUBLIC_HTML_ROOT}
   security:
     enabled: true
-    authentication: idtoken
+    authentication: session
     oauth2:
       clients:
         default:
@@ -29,6 +31,7 @@ micronaut:
       logout:
         get-allowed: true
     redirect:
+      prior-to-login: true
       unauthorized:
         url: ${UNAUTHORIZED_REDIRECT_URL:/oauth/login/default}
       login-success: ${LOGIN_SUCCESS_URL:/}
