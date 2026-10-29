@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     implementation("io.micronaut:micronaut-http-client")
-    implementation("io.projectreactor:reactor-core")
+    implementation("io.micronaut.reactor:micronaut-reactor")
     implementation("io.micronaut.groovy:micronaut-runtime-groovy")
     implementation("io.micronaut.security:micronaut-security-oauth2")
     implementation("io.micronaut.security:micronaut-security-jwt")
