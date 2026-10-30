@@ -36,10 +36,10 @@ class RequestAuditFilter implements HttpServerFilter {
 
     private static void record(HttpRequest<?> request, int status) {
         // These objects are populated by Micronaut after authentication, not by headers.
-        Authentication authentication = request.getAttribute(SecurityFilter.AUTHENTICATION, Authentication).orElse(null)
+        Authentication authentication = SessionForRequest.find(request)
+            .flatMap { session -> session.get(SecurityFilter.AUTHENTICATION, Authentication) }.orElse(null)
         if (authentication == null) {
-            authentication = SessionForRequest.find(request)
-                .flatMap { session -> session.get(SecurityFilter.AUTHENTICATION, Authentication) }.orElse(null)
+            authentication = request.getAttribute(SecurityFilter.AUTHENTICATION, Authentication).orElse(null)
         }
         String principal = authentication == null ? 'anonymous' : authentication.name
         Object emailClaim = authentication?.attributes?.get('email')
