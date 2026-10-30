@@ -123,6 +123,8 @@ class SecurityAuditSpec extends Specification implements TestPropertyProvider {
     void 'successful login is audited using the newly authenticated session'() {
         given:
         def callback = new SimpleHttpRequest(HttpMethod.GET, '/oauth/callback/default?code=DO_NOT_LOG', null)
+        callback.setAttribute(SecurityFilter.AUTHENTICATION,
+            Authentication.build('old-subject', [], [email: 'old@example.org']))
         def authentication = Authentication.build('subject-123', [],
             [email: 'reader@example.org'])
         def chain = Stub(ServerFilterChain) {
